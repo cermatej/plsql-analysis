@@ -48,7 +48,8 @@ def test_analyse_bulk():
     for file in os.listdir("examples"):
         f = open(f"examples/{file}", "r")
         queries_raw = f.read().split(';')
-        queries = [s.rstrip() for s in queries_raw]
+        queries = [s.rstrip().replace("\n","") for s in queries_raw]
+        # queries = [s for s in queries]
 
         for query in queries:
             te = TokenExtractor()

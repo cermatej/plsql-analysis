@@ -21,6 +21,10 @@ todo
 * multiple tables - selecting column without defining table
 
 #### Missing classes 
+* class AlterTable(AliasNode):
+* class AddConstraints(AliasNode):
+* class AlterColumn(AliasNode):
+
 * class Union(AliasNode):
 * class TableAliasExpr(AliasNode):
 * class UnaryExpr(AliasNode):
@@ -33,11 +37,8 @@ todo
 * class Column(AliasNode):
 * class AddColumns(AliasNode):
 * class DropColumn(AliasNode):
-* class AlterColumn(AliasNode):
 * class Reference(AliasNode):
 * class CreateTable(AliasNode):
-* class AlterTable(AliasNode):
-* class AddConstraints(AliasNode):
 * class DropConstraints(AliasNode):
 * class DropConstraint(AliasNode):
 * class DropTable(AliasNode):

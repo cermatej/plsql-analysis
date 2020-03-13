@@ -1,8 +1,8 @@
 from antlr_plsql import ast
 from collections import defaultdict
 
-class TokenExtractor:
 
+class TokenExtractor:
     # todo link to RES_KEY attributes
     NODE_ATTRS = {
         'target_list': 'columns',
@@ -21,8 +21,9 @@ class TokenExtractor:
     RES_KEY_FUNCS = 'funcs'
 
     STATEMENT_TYPES = {
-        'select': ast.SelectStmt,
-        'insert': ast.InsertStmt
+        ast.SelectStmt: 'select',
+        ast.InsertStmt: 'insert',
+        ast.AlterTable: 'alter'
     }
 
     def __init__(self) -> None:
@@ -36,9 +37,9 @@ class TokenExtractor:
         self.__get_tokens(body)
 
     def __get_stmt_type(self, stmt_body):
-        for type, classType in self.STATEMENT_TYPES.items():
-            if isinstance(stmt_body, classType):
-                self.tokens[self.RES_KEY_TYPE] = type
+        # if is one of known recognized statements, categorize the statement
+        if isinstance(stmt_body, tuple(type for type in self.STATEMENT_TYPES.keys())):
+            self.tokens[self.RES_KEY_TYPE] = self.STATEMENT_TYPES[type(stmt_body)]
 
     def __node_has_children(self, tree_node):
         return hasattr(tree_node, 'children') and tree_node.children
@@ -47,7 +48,7 @@ class TokenExtractor:
         for attr, res_key in self.NODE_ATTRS.items():
             if hasattr(tree_node, attr) and bool(getattr(tree_node, attr)):
                 child_attr = getattr(tree_node, attr)
-                if type(child_attr) is not list: child_attr = [child_attr] # cast to list if not
+                if type(child_attr) is not list: child_attr = [child_attr]  # cast to list if not
                 for child in child_attr:
                     self.__save_token(child, res_key)
 
@@ -67,11 +68,11 @@ class TokenExtractor:
                 self.__save_token(arg, res_key)
             self.tokens[self.RES_KEY_FUNCS].add(node.name)
         elif isinstance(node, ast.BinaryExpr):
-            self.__save_token(node.left, res_key)
-            self.__save_token(node.right, res_key)
+            for n in [node.left, node.right]:
+                self.__save_token(n, res_key)
         elif isinstance(node, ast.JoinExpr):
-            self.__save_token(node.left, res_key)
-            self.__save_token(node.right, res_key)
+            for n in [node.left, node.right]:
+                self.__save_token(n, res_key)
             self.__save_token(node.cond, self.RES_KEY_COLUMNS)
         elif isinstance(node, ast.OrderByExpr) or isinstance(node, ast.GroupBy):
             for expr in node.expr:
