@@ -1,4 +1,6 @@
 import os
+from pprint import pprint
+
 from TokenExtractor import TokenExtractor
 import pytest
 
@@ -11,7 +13,7 @@ import pytest
         ('SELECT id FROM users WHERE name = "DAVID"',
          {'type': 'select', 'tables': {'users'}, 'columns': {'id', 'name'}}),
         ('select * from users',
-         {'type': 'select', 'tables': {'users'}, 'columns': {'*'}}),
+         {'type': 'select', 'tables': {'users'}}),
         ('Select id FROM users; SELECT id2 FROM users2;',
          {'type': 'select', 'tables': {'users'}, 'columns': {'id'}}),
         ('SELECT column_name AS alias_name FROM users;',
@@ -41,21 +43,31 @@ def test_analyse(query, result):
     te = TokenExtractor()
     te.analyse(query)
 
-    assert te.tokens == result
+    # ignore metadata field when asserting
+    tokens = {a: val for a, val in te.tokens.items() if a != 'metadata'}
 
+    assert tokens == result
 
-def test_analyse_bulk():
+def pytest_generate_tests(metafunc):
+    if "q" in metafunc.fixturenames:
+        metafunc.parametrize("q", get_query_examples())
+
+def get_query_examples():
+    queries = list()
     for file in os.listdir("examples"):
         f = open(f"examples/{file}", "r")
-        queries_raw = f.read().split(';')
-        queries = [s.rstrip().replace("\n","") for s in queries_raw]
-        # queries = [s for s in queries]
+        queries = queries + [s.rstrip().replace("\n", "") for s in f.read().split(';')]
 
-        for query in queries:
-            te = TokenExtractor()
-            te.analyse(query)
+    return [s for s in queries[:50] if s]
 
-            print(query)
-            print(te.tokens)
+def test_analyse_undefined(q):
+    te = TokenExtractor()
+    te.analyse(q)
 
-            assert True
+    print(f'\n\n{q}\n\n')
+    pprint(te.tokens)
+
+    if None in te.tokens.keys():
+        assert False
+
+    assert True
