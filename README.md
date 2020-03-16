@@ -1,5 +1,12 @@
 # psql-analysis
 
+### Submodule init
+To fetch project submodules, you have to run these commands
+```bash
+git submodule init
+git submodule update
+```
+
 ### Developer notes
 #### ANTLR notes
 https://github.com/antlr/antlr4/blob/master/doc/python-target.md
@@ -21,9 +28,8 @@ todo
 * multiple tables - selecting column without defining table
 
 #### Missing classes 
-* class AlterTable(AliasNode):
-* class AddConstraints(AliasNode):
 * class AlterColumn(AliasNode):
+* class Reference(AliasNode):
 
 * class Union(AliasNode):
 * class TableAliasExpr(AliasNode):
@@ -37,12 +43,10 @@ todo
 * class Column(AliasNode):
 * class AddColumns(AliasNode):
 * class DropColumn(AliasNode):
-* class Reference(AliasNode):
 * class CreateTable(AliasNode):
 * class DropConstraints(AliasNode):
 * class DropConstraint(AliasNode):
 * class DropTable(AliasNode):
-* class Constraint(AliasNode):
 * class UpdateStmt(AliasNode):
 * class Update(AliasNode):
 * class DeleteStmt(AliasNode):
