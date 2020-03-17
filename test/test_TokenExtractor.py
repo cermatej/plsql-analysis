@@ -56,7 +56,7 @@ def get_query_examples():
     queries = list()
     for file in os.listdir("examples"):
         f = open(f"examples/{file}", "r")
-        queries = queries + [s.rstrip().replace("\n", "") for s in f.read().split(';')]
+        queries = queries + [s.rstrip().replace("\n", " ") for s in f.read().split(';')]
 
     return [s for s in queries[:10] if s]
 

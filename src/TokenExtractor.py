@@ -20,7 +20,8 @@ class TokenExtractor:
     }
 
     RECOGNIZED_NODE_TYPES = [
-        'Paren_column_list'
+        'Paren_column_list',
+        'Column_list'
     ]
 
     METADATA_IGNORED = [
@@ -59,6 +60,9 @@ class TokenExtractor:
     SPECIAL_FIELDS_MAPPING = {
         ast.Call: {
             'name': RES_KEY_FUNCS
+        },
+        ast.Constraint: {
+            'type': 'constraint_type'
         }
     }
 
@@ -111,17 +115,18 @@ class TokenExtractor:
             self.tokens[self.RES_KEY_METADATA].add(f'uses_{node_type.__name__}')
 
         # iterate through non-empty children nodes
-        for attr in [a for a in tree_node._fields if getattr(tree_node, a) is not None]:
+        attrs_ne = [a for a in tree_node._fields if getattr(tree_node, a) is not None]
+        for attr in attrs_ne:
             save_key = self.__get_save_key(attr, node_type)
+            attr_val = getattr(tree_node, attr)
             if save_key:
-                self.__iter_attr(attr, save_key, tree_node)
+                self.__iter_attr(attr_val, save_key)
             else:
-                self.__iter_attr(attr, save_key_prev, tree_node)
+                self.__iter_attr(attr_val, save_key_prev)
 
 
-    def __iter_attr(self, attr, save_key, tree_node):
-        node_vals = getattr(tree_node, attr)
-        for node in self.__cast_list_if_not(node_vals):
+    def __iter_attr(self, attr_val, save_key):
+        for node in self.__cast_list_if_not(attr_val):
             # only iterate through known nodes (prevent iteration to actual variables only)
             if isinstance(node, ast.AliasNode) or type(node).__name__ in self.RECOGNIZED_NODE_TYPES:
                 self.__get_tokens(node, save_key)
