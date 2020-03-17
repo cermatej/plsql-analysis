@@ -58,7 +58,7 @@ def get_query_examples():
         f = open(f"examples/{file}", "r")
         queries = queries + [s.rstrip().replace("\n", "") for s in f.read().split(';')]
 
-    return [s for s in queries[:50] if s]
+    return [s for s in queries[:10] if s]
 
 def test_analyse_undefined(q):
     te = TokenExtractor()

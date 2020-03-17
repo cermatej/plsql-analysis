@@ -8,18 +8,27 @@ class TokenExtractor:
     RES_KEY_METADATA = 'metadata'
     RES_KEY_COLUMNS = 'columns'
     RES_KEY_TABLES = 'tables'
+    RES_KEY_FUNCS = 'funcs'
+    RES_KEY_CONSTRAINT = 'constraint'
+    RES_KEY_ALIASES = 'aliases'
 
     STATEMENT_TYPES = {
         ast.SelectStmt: 'select',
         ast.InsertStmt: 'insert',
-        ast.AlterTable: 'alter'
+        ast.AlterColumn: 'alter_column',
+        ast.AlterTable: 'alter_table'
     }
 
-    METADATA_IGNORED = [
-        ast.SelectStmt, ast.InsertStmt, ast.DeleteStmt, ast.UpdateStmt, ast.Identifier
+    RECOGNIZED_NODE_TYPES = [
+        'Paren_column_list'
     ]
 
-    # todo dict res_key > list(attrs)
+    METADATA_IGNORED = [
+        ast.SelectStmt, ast.InsertStmt, ast.DeleteStmt, ast.UpdateStmt, ast.Identifier,
+        ast.AlterColumn, ast.AlterTable
+    ]
+
+    # todo dict res_key > list(attrs)?
     GENERAL_FIELDS_MAPPING = {
         'target_list': RES_KEY_COLUMNS,
         'where_clause': RES_KEY_COLUMNS,
@@ -27,20 +36,29 @@ class TokenExtractor:
         'group_by_clause': RES_KEY_COLUMNS,
         'having_clause': RES_KEY_COLUMNS,
         'cond': RES_KEY_COLUMNS,
+        'columns': RES_KEY_COLUMNS,
+        'column_list': RES_KEY_COLUMNS,
         'from_clause': RES_KEY_TABLES,
         'table': RES_KEY_TABLES
     }
 
+    # nodes that contain Identifiers
     NODE_FIELDS_MAPPING = {
         ast.AliasExpr: {
-            'alias': 'aliases'
+            'alias': RES_KEY_ALIASES
+        },
+        ast.AlterTable: {
+            'name': RES_KEY_TABLES
+        },
+        ast.Constraint: {
+            'name': RES_KEY_CONSTRAINT
         }
     }
 
     # fields that needs to be saved immediately (does not contain Identifier)
     SPECIAL_FIELDS_MAPPING = {
         ast.Call: {
-            'name': 'funcs'
+            'name': RES_KEY_FUNCS
         }
     }
 
@@ -95,7 +113,7 @@ class TokenExtractor:
         # iterate through non-empty children nodes
         for attr in [a for a in tree_node._fields if getattr(tree_node, a) is not None]:
             save_key = self.__get_save_key(attr, node_type)
-            if save_key is not None:
+            if save_key:
                 self.__iter_attr(attr, save_key, tree_node)
             else:
                 self.__iter_attr(attr, save_key_prev, tree_node)
@@ -104,7 +122,8 @@ class TokenExtractor:
     def __iter_attr(self, attr, save_key, tree_node):
         node_vals = getattr(tree_node, attr)
         for node in self.__cast_list_if_not(node_vals):
-            if isinstance(node, ast.AliasNode):
+            # only iterate through known nodes (prevent iteration to actual variables only)
+            if isinstance(node, ast.AliasNode) or type(node).__name__ in self.RECOGNIZED_NODE_TYPES:
                 self.__get_tokens(node, save_key)
 
     def __cast_list_if_not(self, child_attr):
