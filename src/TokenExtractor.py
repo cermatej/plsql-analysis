@@ -11,6 +11,7 @@ class TokenExtractor:
     RES_KEY_FUNCS = 'funcs'
     RES_KEY_CONSTRAINT = 'constraint'
     RES_KEY_ALIASES = 'aliases'
+    RES_KEY_VALUES = 'values'
 
     STATEMENT_TYPES = {
         ast.SelectStmt: 'select',
@@ -19,15 +20,15 @@ class TokenExtractor:
         ast.AlterTable: 'alter_table'
     }
 
-    RECOGNIZED_NODE_TYPES = [
+    RECOGNIZED_NODE_TYPES = {
         'Paren_column_list',
         'Column_list'
-    ]
+    }
 
-    METADATA_IGNORED = [
+    METADATA_IGNORED = {
         ast.SelectStmt, ast.InsertStmt, ast.DeleteStmt, ast.UpdateStmt, ast.Identifier,
         ast.AlterColumn, ast.AlterTable
-    ]
+    }
 
     # todo dict res_key > list(attrs)?
     GENERAL_FIELDS_MAPPING = {
@@ -40,10 +41,11 @@ class TokenExtractor:
         'columns': RES_KEY_COLUMNS,
         'column_list': RES_KEY_COLUMNS,
         'from_clause': RES_KEY_TABLES,
-        'table': RES_KEY_TABLES
+        'table': RES_KEY_TABLES,
+        'values': RES_KEY_VALUES
     }
 
-    # nodes that contain Identifiers
+    # nodes that contain identifiers
     NODE_FIELDS_MAPPING = {
         ast.AliasExpr: {
             'alias': RES_KEY_ALIASES
@@ -64,6 +66,11 @@ class TokenExtractor:
         ast.Constraint: {
             'type': 'constraint_type'
         }
+    }
+
+    IGNORED_FIELDS_MAPPING = {
+        ast.BinaryExpr: {'op'},
+        ast.SortBy: {'direction'}
     }
 
     def __init__(self) -> None:
@@ -97,13 +104,23 @@ class TokenExtractor:
     def __get_tokens(self, tree_node, save_key_prev=None):
         node_type = type(tree_node)
 
-        # is Identifier
-        if isinstance(tree_node, ast.Identifier):
+        # if list > iterate
+        if isinstance(tree_node, list):
+            for i in tree_node:
+                self.__get_tokens(i, save_key_prev)
+            return None
+
+        # is identifier / literal value
+        if isinstance(tree_node, (ast.Terminal, ast.Identifier)):
+            # is a sql identifier
             if hasattr(tree_node.children[0], 'regular_id') and tree_node.children[0].regular_id:
                 self.tokens[save_key_prev].add(tree_node.get_text())
-                return None
+            # is literal value
+            else:
+                self.tokens[self.RES_KEY_VALUES].add(self.__strip_quotes(tree_node.get_text()))
+            return None
 
-        # special cases, that does not contain Identifiers
+        # special cases, that does not contain Identifiers > contain the actual value directly
         if node_type in self.SPECIAL_FIELDS_MAPPING.keys():
             for attr, save_key in self.SPECIAL_FIELDS_MAPPING[node_type].items():
                 val = getattr(tree_node, attr)
@@ -114,9 +131,8 @@ class TokenExtractor:
         if node_type not in self.METADATA_IGNORED:
             self.tokens[self.RES_KEY_METADATA].add(f'uses_{node_type.__name__}')
 
-        # iterate through non-empty children nodes
-        attrs_ne = [a for a in tree_node._fields if getattr(tree_node, a) is not None]
-        for attr in attrs_ne:
+        # iterate nodes
+        for attr in self.__get_node_attrs(tree_node):
             save_key = self.__get_save_key(attr, node_type)
             attr_val = getattr(tree_node, attr)
             if save_key:
@@ -124,12 +140,25 @@ class TokenExtractor:
             else:
                 self.__iter_attr(attr_val, save_key_prev)
 
+    def __get_node_attrs(self, node):
+        # iterate through non-empty children nodes
+        attrs_ne = [a for a in node._fields if getattr(node, a) is not None]
+        # that are not ignored
+        if type(node) in self.IGNORED_FIELDS_MAPPING.keys():
+            return set(attrs_ne) - self.IGNORED_FIELDS_MAPPING[type(node)]
+        return attrs_ne
+
+    def __strip_quotes(self, str):
+        return str.strip('"').strip("'")
 
     def __iter_attr(self, attr_val, save_key):
         for node in self.__cast_list_if_not(attr_val):
             # only iterate through known nodes (prevent iteration to actual variables only)
-            if isinstance(node, ast.AliasNode) or type(node).__name__ in self.RECOGNIZED_NODE_TYPES:
+            if self.__is_known_node(node):
                 self.__get_tokens(node, save_key)
+
+    def __is_known_node(self, node):
+        return isinstance(node, (ast.AliasNode, ast.Terminal, list)) or type(node).__name__ in self.RECOGNIZED_NODE_TYPES
 
     def __cast_list_if_not(self, child_attr):
         return [child_attr] if not isinstance(child_attr, list) else child_attr
