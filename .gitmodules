@@ -1,0 +1,6 @@
+[submodule "src/antlr-plsql"]
+	path = src/antlr-plsql
+	url = https://github.com/datacamp/antlr-plsql
+[submodule "modules/antlr-ast"]
+	path = modules/antlr-ast
+	url = https://github.com/datacamp/antlr-ast
