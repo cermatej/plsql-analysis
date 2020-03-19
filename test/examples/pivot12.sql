@@ -13,6 +13,6 @@
     (
         value
         for value_type in
-            (v1, v2,v3,v4,v5) -- Also can give ANY here.
+            (v1, v2,v3,v4,v5)
     )
  )

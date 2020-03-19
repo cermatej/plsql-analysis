@@ -1,4 +1,4 @@
--- https://docs.oracle.com/cd/E18283_01/server.112/e16541/part_admin001.htm
+
 CREATE TABLE sales
   ( prod_id       NUMBER(6)
   , cust_id       NUMBER

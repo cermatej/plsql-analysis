@@ -1,4 +1,4 @@
--- See https://docs.oracle.com/cd/B19306_01/server.102/b14200/functions228.htm
+
 
 SELECT warehouse_name warehouse,
    warehouse2."Water", warehouse2."Rail", warehouse2."Box"

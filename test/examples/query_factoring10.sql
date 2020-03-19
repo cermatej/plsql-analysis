@@ -11,7 +11,7 @@ t(root,lev,obj,link,path) as (
 select obj,1,obj,link,cast(obj||'->'||link 
 as varchar2(4000))
 from o 
-where obj='a'  -- start with
+where obj='a'
 union all
 select 
   t.root,t.lev+1,o.obj,o.link,

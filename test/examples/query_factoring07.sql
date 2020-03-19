@@ -1,7 +1,7 @@
 with timegrouped_rawdata
 as
 (
-	select /*+ leading(sn di md sh ot) cardinality(ot 1000) */
+	select
 	sh.metric_id as metric_id ,
 	ot.bsln_guid as bsln_guid ,
 	ot.timegroup as timegroup ,

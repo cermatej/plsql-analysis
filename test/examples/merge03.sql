@@ -1,6 +1,4 @@
-merge /*+ dynamic_sampling(mm 4) dynamic_sampling_est_cdn(mm)
-              dynamic_sampling(m 4) dynamic_sampling_est_cdn(m) */
-
+merge
 into sys.mon_mods_all$ mm
 using
 (

@@ -1,4 +1,4 @@
--- XMLTable and outer join methods: http://anononxml.blogspot.com/2011/06/xmltable-and-outer-join-methods.html
+
 
 select master_id
           ,details_id

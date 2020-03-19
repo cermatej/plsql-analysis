@@ -5,9 +5,9 @@ partition by (country)
 dimension by (prod, year)
 measures (sale s)
 ignore nav
--- cell_reference_options
+
 unique dimension
--- here starts model_rules_clause
+
 rules upsert sequential order
 (
 s[prod='mouse pad', year=2001] = s['mouse pad', 1999] + s['mouse pad', 2000],
