@@ -1,4 +1,4 @@
-# psql-analysis
+# plsql-analysis
 
 ### Submodule init
 To fetch project submodules, you have to run these commands
