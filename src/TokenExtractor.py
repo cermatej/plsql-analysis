@@ -123,6 +123,9 @@ class TokenExtractor:
         return None
 
     def __get_tokens(self, tree_node, save_key_prev=None):
+        if not self.__is_known_node(tree_node):
+            return None
+
         node_type = type(tree_node)
 
         # if list > iterate
@@ -163,10 +166,10 @@ class TokenExtractor:
         for attr in self.__get_node_attrs(tree_node):
             save_key = self.__get_save_key(attr, node_type)
             attr_val = getattr(tree_node, attr)
-            if save_key:
-                self.__iter_attr(attr_val, save_key)
-            else:
-                self.__iter_attr(attr_val, save_key_prev)
+            new_key = save_key if save_key else save_key_prev
+
+            for node in self.__cast_list_if_not(attr_val):
+                self.__get_tokens(node, new_key)
 
     def __get_node_attrs(self, node):
         # iterate through non-empty children nodes
@@ -182,12 +185,6 @@ class TokenExtractor:
 
     def __strip_quotes(self, str):
         return str.strip('"').strip("'")
-
-    def __iter_attr(self, attr_val, save_key):
-        for node in self.__cast_list_if_not(attr_val):
-            # only iterate through known nodes (prevent iteration to actual variables only)
-            if self.__is_known_node(node): # todo move to __get_tokens method?
-                self.__get_tokens(node, save_key)
 
     def __is_known_node(self, node):
         return isinstance(node, (ast.AliasNode, ast.Terminal, list)) or type(
