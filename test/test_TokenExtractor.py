@@ -50,7 +50,7 @@ def test_analyse(query, result):
 
 BULK_SIZE = 10
 QUERIES_PER_FILE = 3
-BULK_INDEX = 0
+BULK_INDEX = 2
 
 def pytest_generate_tests(metafunc):
     if "q" in metafunc.fixturenames:
@@ -66,7 +66,7 @@ def get_query_examples(bulk_group, bulk_size, queries_per_file):
     return queries[bulk_group*bulk_size:(bulk_group+1)*bulk_size]
 
 def test_analyse_single():
-    single_index = 9
+    single_index = 0
     q = get_query_examples(BULK_INDEX, BULK_SIZE, QUERIES_PER_FILE)
 
     test_analyse_bulk(q[single_index])
@@ -82,10 +82,18 @@ def test_analyse_bulk(q):
 
     pprint(te.tokens)
 
+    # any tokens found
     if not te.tokens:
-        assert False
+        assert False, 'Any tokens found'
 
-    if None in te.tokens.keys():
-        assert False
+    # tokens contain value other than string
+    for key, tokens in te.tokens.items():
+        # wrong classification
+        if not isinstance(key, str):
+            assert False, f'Key for tokens: "{tokens}" contain value other than str'
+        # wrong save
+        for token in tokens:
+            if not isinstance(token, str):
+                assert False, f'Value for key "{key}" contains value other than str'
 
     assert True
