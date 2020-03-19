@@ -34,7 +34,12 @@ import pytest
         ('SELECT COUNT (customer_id) FROM customer GROUP BY store_id;',
          {'type': 'select', 'tables': {'customer'}, 'columns': {'customer_id', 'store_id'}, 'funcs': {'COUNT'}}),
         ('SELECT SUM(column_1) FROM mytable GROUP BY column_1 HAVING col3 > 100;',
-         {'type': 'select', 'tables': {'mytable'}, 'columns': {'column_1', 'col3'}, 'funcs': {'SUM'}, 'values': {'100'}})
+         {'type': 'select', 'tables': {'mytable'}, 'columns': {'column_1', 'col3'}, 'funcs': {'SUM'}, 'values': {'100'}}),
+        ('select distinct name from t1;',
+         {'type': 'select', 'tables': {'t1'}, 'columns': {'name'}, 'values': {'distinct'}}),
+        ('select * from t1, ( t2 left outer join t3 using(dummy) )',
+         {'type': 'select', 'tables': {'t1'}, 'columns': {'name'}, 'values': {'distinct'}}),
+
     ]
 )
 def test_analyse(query, result):
@@ -48,45 +53,59 @@ def test_analyse(query, result):
 
 ################ BULK TESTS FROM EXAMPLE FILES
 
-BULK_SIZE = 10
 QUERIES_PER_FILE = 3
-BULK_INDEX = 2
+BULK_SIZE = 10
+BULK_INDEX = 3
 
 def pytest_generate_tests(metafunc):
-    if "q" in metafunc.fixturenames:
-        metafunc.parametrize("q", get_query_examples(BULK_INDEX, BULK_SIZE, QUERIES_PER_FILE))
+    if "q_sample" in metafunc.fixturenames:
+        metafunc.parametrize("q_sample", __get_query_sample(BULK_INDEX, BULK_SIZE))
+    if 'q_all' in metafunc.fixturenames:
+        metafunc.parametrize("q_all", __get_queries())
 
-def get_query_examples(bulk_group, bulk_size, queries_per_file):
+def __get_query_sample(bulk_index, bulk_size):
+    queries = __get_queries()
+
+    return queries[bulk_index * bulk_size:(bulk_index + 1) * bulk_size]
+
+def __get_queries():
     queries = list()
     for file in os.listdir("examples"):
         f = open(f"examples/{file}", "r")
-        queries_raw = f.read().split(';')[:queries_per_file]
-        queries = queries + [' '.join(q.rstrip().replace("\n", " ").split()) for q in queries_raw if q]
+        queries_raw = f.read().split(';')
+        queries_clean = [' '.join(q.rstrip().replace("\n", " ").split()) for q in queries_raw]
+        queries_ne = [q for q in queries_clean if q]
 
-    return queries[bulk_group*bulk_size:(bulk_group+1)*bulk_size]
+        queries = queries + queries_ne[:QUERIES_PER_FILE]
+    return queries
 
 def test_analyse_single():
-    single_index = 0
-    q = get_query_examples(BULK_INDEX, BULK_SIZE, QUERIES_PER_FILE)
+    single_index = 7
+    q = __get_query_sample(BULK_INDEX, BULK_SIZE)
 
     test_analyse_bulk(q[single_index])
 
-def test_analyse_bulk(q):
-    print(f'\n\n{q}\n')
+def test_analyse_all(q_all):
+    __test_query(q_all)
+
+def test_analyse_bulk(q_sample):
+    __test_query(q_sample)
+
+def __test_query(query):
+    print(f'\n\n{query}\n')
     # try:
     te = TokenExtractor()
-    te.analyse(q)
+    te.analyse(query)
     # except:
-    #
-    #     assert True # ignore
-
+    #     assert True
     pprint(te.tokens)
 
     # any tokens found
     if not te.tokens:
         assert False, 'Any tokens found'
-
     # tokens contain value other than string
+    if not te.tokens['type']:
+        assert False, 'Query type not found'
     for key, tokens in te.tokens.items():
         # wrong classification
         if not isinstance(key, str):
@@ -95,5 +114,4 @@ def test_analyse_bulk(q):
         for token in tokens:
             if not isinstance(token, str):
                 assert False, f'Value for key "{key}" contains value other than str'
-
     assert True

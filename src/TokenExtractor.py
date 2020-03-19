@@ -10,6 +10,8 @@ class TokenExtractor:
     RES_KEY_CONSTRAINT = 'constraint'
     RES_KEY_ALIASES = 'aliases'
     RES_KEY_VALUES = 'values'
+    RES_KEY_PREF = 'pref'
+    RES_KEY_INDICES = 'indices'
 
     STATEMENT_TYPES = {
         ast.SelectStmt: 'select',
@@ -21,15 +23,8 @@ class TokenExtractor:
         ast.DropTable: 'drop_table'
     }
 
-    RECOGNIZED_NODE_TYPES = {
-        'Paren_column_list',
-        'Column_list',
-        'Dml_table_expression_clause'
-    }
-
     METADATA_IGNORED = {
-        ast.SelectStmt, ast.InsertStmt, ast.DeleteStmt, ast.UpdateStmt, ast.Identifier,
-        ast.AlterColumn, ast.AlterTable, ast.Column
+        ast.Identifier, ast.Column
     }
 
     # todo dict res_key > list(attrs)?
@@ -43,10 +38,17 @@ class TokenExtractor:
         'columns': RES_KEY_COLUMNS,
         'column': RES_KEY_COLUMNS,
         'column_list': RES_KEY_COLUMNS,
+        'model_column_list': RES_KEY_COLUMNS,
+        'model_column': RES_KEY_COLUMNS,
+        'column_name': RES_KEY_COLUMNS,
+        'index_expr': RES_KEY_COLUMNS,
         'from_clause': RES_KEY_TABLES,
         'table': RES_KEY_TABLES,
+        'table_alias': RES_KEY_TABLES,
         'tableview_name': RES_KEY_TABLES,
-        'values': RES_KEY_VALUES
+        'values': RES_KEY_VALUES,
+        'pref': RES_KEY_PREF,
+        'index_name': RES_KEY_INDICES
     }
 
     # nodes that contain identifiers
@@ -71,6 +73,13 @@ class TokenExtractor:
         },
         ast.Update: {
             'expression': RES_KEY_COLUMNS
+        },
+        ast.BinaryExpr: {
+            'left': RES_KEY_COLUMNS,
+            'right': RES_KEY_COLUMNS
+        },
+        ast.UnaryExpr: {
+            'expr': RES_KEY_COLUMNS
         }
     }
 
@@ -82,6 +91,9 @@ class TokenExtractor:
         },
         ast.Constraint: {
             'type': 'constraint_type'
+        },
+        ast.SelectStmt: {
+            'pref': 'prefs'
         }
     }
 
@@ -108,11 +120,12 @@ class TokenExtractor:
         # if is one of known recognized statements, categorize the statement
         if isinstance(stmt_body, tuple(type for type in self.STATEMENT_TYPES.keys())):
             self.tokens[self.RES_KEY_TYPE] = self.STATEMENT_TYPES[type(stmt_body)]
-
-    def __node_has_children(self, tree_node):
-        return hasattr(tree_node, 'children') and tree_node.children
+        # if not just save the type category
+        else:
+            self.tokens[self.RES_KEY_TYPE] = type(stmt_body).__name__
 
     def __get_save_key(self, attr, node_type):
+        attr = attr.lower()
         # if its generally recognized attribute
         if attr in self.GENERAL_FIELDS_MAPPING.keys():
             return self.GENERAL_FIELDS_MAPPING[attr]
@@ -123,6 +136,7 @@ class TokenExtractor:
         return None
 
     def __get_tokens(self, tree_node, save_key_prev=None):
+
         if not self.__is_known_node(tree_node):
             return None
 
@@ -152,11 +166,8 @@ class TokenExtractor:
             for attr, save_key in self.SPECIAL_FIELDS_MAPPING[node_type].items():
                 attr_val = getattr(tree_node, attr)
                 if attr_val is not None:
-                    # if str - save directly
-                    if isinstance(attr_val, str):
-                        self.tokens[save_key].add(attr_val)
-                    else:
-                        self.__get_tokens(attr_val, save_key)
+                    val = attr_val if isinstance(attr_val, str) else self.__get_node_value(attr_val)
+                    self.tokens[save_key].add(val)
 
         # collect metadata based on node type
         if node_type not in self.METADATA_IGNORED:
@@ -187,8 +198,8 @@ class TokenExtractor:
         return str.strip('"').strip("'")
 
     def __is_known_node(self, node):
-        return isinstance(node, (ast.AliasNode, ast.Terminal, list)) or type(
-            node).__name__ in self.RECOGNIZED_NODE_TYPES
+        # object node having children attr or list
+        return (hasattr(node, 'children') and node.children) or isinstance(node, list)
 
     def __cast_list_if_not(self, child_attr):
         return [child_attr] if not isinstance(child_attr, list) else child_attr
