@@ -74,7 +74,7 @@ class TokenExtractor:
         }
     }
 
-    # fields that needs to be saved immediately (does not contain Identifier)
+    # fields that needs to be saved immediately
     # there are some exceptions where the behaviour is ambiguous
     SPECIAL_FIELDS_MAPPING = {
         ast.Call: {
@@ -133,21 +133,27 @@ class TokenExtractor:
 
         # is identifier / literal value
         if isinstance(tree_node, (ast.Terminal, ast.Identifier)):
+            new_save_key = None
             # is a sql identifier
             if hasattr(tree_node.children[0], 'regular_id') and tree_node.children[0].regular_id:
-                self.tokens[save_key_prev].add(tree_node.get_text())
+                new_save_key = save_key_prev
             # is literal value
             else:
-                self.tokens[self.RES_KEY_VALUES].add(self.__strip_quotes(tree_node.get_text()))
+                new_save_key = self.RES_KEY_VALUES
+            # save value
+            self.tokens[new_save_key].add(self.__get_node_value(tree_node))
             return None
 
-        # special cases, that does not contain Identifiers > contain the actual value directly
+        # special cases, that sometimes contain the actual value directly
         if node_type in self.SPECIAL_FIELDS_MAPPING.keys():
             for attr, save_key in self.SPECIAL_FIELDS_MAPPING[node_type].items():
                 attr_val = getattr(tree_node, attr)
                 if attr_val is not None:
-                    val = attr_val.get_text() if isinstance(attr_val, ast.Terminal) else attr_val
-                    self.tokens[save_key].add(val)
+                    # if str - save directly
+                    if isinstance(attr_val, str):
+                        self.tokens[save_key].add(attr_val)
+                    else:
+                        self.__get_tokens(attr_val, save_key)
 
         # collect metadata based on node type
         if node_type not in self.METADATA_IGNORED:
@@ -166,7 +172,13 @@ class TokenExtractor:
         # iterate through non-empty children nodes
         attrs_ne = [a for a in node._fields if getattr(node, a) is not None]
         # that are not ignored
-        return set(attrs_ne) - self.IGNORED_ATTRS
+        attrs = set(attrs_ne) - self.IGNORED_ATTRS
+        # that are not in special cases
+        special_fields = self.SPECIAL_FIELDS_MAPPING[type(node)].keys() if type(node) in self.SPECIAL_FIELDS_MAPPING.keys() else set()
+        return attrs - special_fields
+
+    def __get_node_value(self, node):
+        return self.__strip_quotes(node.get_text())
 
     def __strip_quotes(self, str):
         return str.strip('"').strip("'")
