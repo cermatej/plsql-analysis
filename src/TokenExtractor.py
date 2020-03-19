@@ -1,9 +1,7 @@
-from antlr_plsql import ast
 from collections import defaultdict
-
+from antlr_plsql import ast
 
 class TokenExtractor:
-
     RES_KEY_TYPE = 'type'
     RES_KEY_METADATA = 'metadata'
     RES_KEY_COLUMNS = 'columns'
@@ -17,17 +15,21 @@ class TokenExtractor:
         ast.SelectStmt: 'select',
         ast.InsertStmt: 'insert',
         ast.AlterColumn: 'alter_column',
-        ast.AlterTable: 'alter_table'
+        ast.UpdateStmt: 'update',
+        ast.AlterTable: 'alter_table',
+        ast.CreateTable: 'create_table',
+        ast.DropTable: 'drop_table'
     }
 
     RECOGNIZED_NODE_TYPES = {
         'Paren_column_list',
-        'Column_list'
+        'Column_list',
+        'Dml_table_expression_clause'
     }
 
     METADATA_IGNORED = {
         ast.SelectStmt, ast.InsertStmt, ast.DeleteStmt, ast.UpdateStmt, ast.Identifier,
-        ast.AlterColumn, ast.AlterTable
+        ast.AlterColumn, ast.AlterTable, ast.Column
     }
 
     # todo dict res_key > list(attrs)?
@@ -39,9 +41,11 @@ class TokenExtractor:
         'having_clause': RES_KEY_COLUMNS,
         'cond': RES_KEY_COLUMNS,
         'columns': RES_KEY_COLUMNS,
+        'column': RES_KEY_COLUMNS,
         'column_list': RES_KEY_COLUMNS,
         'from_clause': RES_KEY_TABLES,
         'table': RES_KEY_TABLES,
+        'tableview_name': RES_KEY_TABLES,
         'values': RES_KEY_VALUES
     }
 
@@ -55,10 +59,23 @@ class TokenExtractor:
         },
         ast.Constraint: {
             'name': RES_KEY_CONSTRAINT
+        },
+        ast.CreateTable: {
+            'name': RES_KEY_TABLES
+        },
+        ast.DropTable: {
+            'name': RES_KEY_TABLES
+        },
+        ast.TableAliasExpr: {
+            'alias': RES_KEY_ALIASES
+        },
+        ast.Update: {
+            'expression': RES_KEY_COLUMNS
         }
     }
 
     # fields that needs to be saved immediately (does not contain Identifier)
+    # there are some exceptions where the behaviour is ambiguous
     SPECIAL_FIELDS_MAPPING = {
         ast.Call: {
             'name': RES_KEY_FUNCS
@@ -68,9 +85,8 @@ class TokenExtractor:
         }
     }
 
-    IGNORED_FIELDS_MAPPING = {
-        ast.BinaryExpr: {'op'},
-        ast.SortBy: {'direction'}
+    IGNORED_ATTRS = {
+        'op', 'direction', 'LEFT_PAREN', 'RIGHT_PAREN', 'COMMA', 'data_type'
     }
 
     def __init__(self) -> None:
@@ -78,10 +94,15 @@ class TokenExtractor:
         self.tree = None
 
     def analyse(self, query):
+        #try:
         self.tree = ast.parse(query)
-        body = self.tree.body[0]
-        self.__get_stmt_type(body)
-        self.__get_tokens(body)
+        # except KeyError:
+        #     print('fail')
+
+        if self.tree.body:
+            body = self.tree.body[0]
+            self.__get_stmt_type(body)
+            self.__get_tokens(body)
 
     def __get_stmt_type(self, stmt_body):
         # if is one of known recognized statements, categorize the statement
@@ -123,8 +144,9 @@ class TokenExtractor:
         # special cases, that does not contain Identifiers > contain the actual value directly
         if node_type in self.SPECIAL_FIELDS_MAPPING.keys():
             for attr, save_key in self.SPECIAL_FIELDS_MAPPING[node_type].items():
-                val = getattr(tree_node, attr)
-                if val is not None:
+                attr_val = getattr(tree_node, attr)
+                if attr_val is not None:
+                    val = attr_val.get_text() if isinstance(attr_val, ast.Terminal) else attr_val
                     self.tokens[save_key].add(val)
 
         # collect metadata based on node type
@@ -144,9 +166,7 @@ class TokenExtractor:
         # iterate through non-empty children nodes
         attrs_ne = [a for a in node._fields if getattr(node, a) is not None]
         # that are not ignored
-        if type(node) in self.IGNORED_FIELDS_MAPPING.keys():
-            return set(attrs_ne) - self.IGNORED_FIELDS_MAPPING[type(node)]
-        return attrs_ne
+        return set(attrs_ne) - self.IGNORED_ATTRS
 
     def __strip_quotes(self, str):
         return str.strip('"').strip("'")
@@ -154,11 +174,12 @@ class TokenExtractor:
     def __iter_attr(self, attr_val, save_key):
         for node in self.__cast_list_if_not(attr_val):
             # only iterate through known nodes (prevent iteration to actual variables only)
-            if self.__is_known_node(node):
+            if self.__is_known_node(node): # todo move to __get_tokens method?
                 self.__get_tokens(node, save_key)
 
     def __is_known_node(self, node):
-        return isinstance(node, (ast.AliasNode, ast.Terminal, list)) or type(node).__name__ in self.RECOGNIZED_NODE_TYPES
+        return isinstance(node, (ast.AliasNode, ast.Terminal, list)) or type(
+            node).__name__ in self.RECOGNIZED_NODE_TYPES
 
     def __cast_list_if_not(self, child_attr):
         return [child_attr] if not isinstance(child_attr, list) else child_attr

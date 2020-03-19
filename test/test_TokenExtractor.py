@@ -4,7 +4,6 @@ from pprint import pprint
 from TokenExtractor import TokenExtractor
 import pytest
 
-
 @pytest.mark.parametrize(
     "query,result",
     [
@@ -47,24 +46,44 @@ def test_analyse(query, result):
 
     assert tokens == result
 
+################ BULK TESTS FROM EXAMPLE FILES
+
+BULK_SIZE = 10
+QUERIES_PER_FILE = 3
+BULK_INDEX = 0
+
 def pytest_generate_tests(metafunc):
     if "q" in metafunc.fixturenames:
-        metafunc.parametrize("q", get_query_examples())
+        metafunc.parametrize("q", get_query_examples(BULK_INDEX, BULK_SIZE, QUERIES_PER_FILE))
 
-def get_query_examples():
+def get_query_examples(bulk_group, bulk_size, queries_per_file):
     queries = list()
     for file in os.listdir("examples"):
         f = open(f"examples/{file}", "r")
-        queries = queries + [s.rstrip().replace("\n", " ") for s in f.read().split(';')]
+        queries_raw = f.read().split(';')[:queries_per_file]
+        queries = queries + [' '.join(q.rstrip().replace("\n", " ").split()) for q in queries_raw if q]
 
-    return [s for s in queries[:10] if s]
+    return queries[bulk_group*bulk_size:(bulk_group+1)*bulk_size]
 
-def test_analyse_undefined(q):
+def test_analyse_single():
+    single_index = 9
+    q = get_query_examples(BULK_INDEX, BULK_SIZE, QUERIES_PER_FILE)
+
+    test_analyse_bulk(q[single_index])
+
+def test_analyse_bulk(q):
+    print(f'\n\n{q}\n')
+    # try:
     te = TokenExtractor()
     te.analyse(q)
+    # except:
+    #
+    #     assert True # ignore
 
-    print(f'\n\n{q}\n\n')
     pprint(te.tokens)
+
+    if not te.tokens:
+        assert False
 
     if None in te.tokens.keys():
         assert False
