@@ -1,3 +1,0 @@
-[submodule "src/modules/antlr-ast"]
-	path = src/modules/antlr-ast
-	url = https://github.com/datacamp/antlr-ast.git
