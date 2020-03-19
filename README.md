@@ -9,24 +9,28 @@ git submodule update
 
 ### Developer notes
 
-#### ANTLR notes
+##### ANTLR notes
 https://github.com/antlr/antlr4/blob/master/doc/python-target.md
 
-#### ANTLR plsql project
+##### ANTLR grammars
+https://github.com/antlr/grammars-v4
+ 
+##### ANTLR plsql project
 https://github.com/datacamp/antlr-plsql
 
-#### tokenizer notes/todos
-first only support explictitly mentioned tokens
+##### Building ANTLR grammar
+https://www.antlr.org/download/antlr-4.8-complete.jar
+https://tomassetti.me/antlr-mega-tutorial/
+```
+java -jar antlr-4.8-complete.jar -Dlanguage=Python3 -o antlr_py/ -visitor plsql.g4
+```
 
+##### ANTLR AST
+https://github.com/datacamp/antlr-ast
 
-todo
-* having clause 
-* select into clause
-* groupby + agg functions
-* aliased columns
-* subqueries
-* case when clause
-* multiple tables - selecting column without defining table
+### TODOS
+* multiple tables - selecting column without defining table ???
+* generate the grammar on demand
 
 #### Missing classes 
 * class AlterColumn(AliasNode):
