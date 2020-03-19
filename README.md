@@ -1,12 +1,5 @@
 # plsql-analysis
 
-### Submodule init
-To fetch project submodules, you have to run these commands
-```bash
-git submodule init
-git submodule update
-```
-
 ### Developer notes
 
 ##### ANTLR notes
@@ -32,29 +25,6 @@ https://github.com/datacamp/antlr-ast
 * multiple tables - selecting column without defining table ???
 * generate the grammar on demand
 
-#### Missing classes 
-* class AlterColumn(AliasNode):
-* class Reference(AliasNode):
-
-* class Union(AliasNode):
-* class TableAliasExpr(AliasNode):
-* class UnaryExpr(AliasNode):
-* class Cast(AliasNode):
-* class OverClause(AliasNode):
-* class Case(AliasNode):
-* class CaseWhen(AliasNode):
-* class PartitionBy(AliasNode):
-* class RenameColumn(AliasNode):
-* class Column(AliasNode):
-* class AddColumns(AliasNode):
-* class DropColumn(AliasNode):
-* class CreateTable(AliasNode):
-* class DropConstraints(AliasNode):
-* class DropConstraint(AliasNode):
-* class DropTable(AliasNode):
-* class UpdateStmt(AliasNode):
-* class Update(AliasNode):
-* class DeleteStmt(AliasNode):
-* class Transformer(BaseNodeTransformer):
-* class AstVisitor(BaseAstVisitor):
- 
+#### Problematic queries
+* column name in CHECK missing completely from the tree
+`ALTER TABLE suppliers ADD CONSTRAINT check_supplier_name   CHECK (supplier_name IN ('IBM', 'Microsoft', 'NVIDIA'))`
