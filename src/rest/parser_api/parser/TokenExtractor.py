@@ -1,5 +1,5 @@
 from collections import defaultdict
-from antlr_plsql import ast
+from parser_api.parser.antlr_plsql import ast
 
 class TokenExtractor:
     RES_KEY_TYPE = 'type'
@@ -116,6 +116,12 @@ class TokenExtractor:
             self.__get_stmt_type(body)
             self.__get_tokens(body)
 
+            self.__tokens_postprocessing()
+
+            return self.tokens
+
+        return None
+
     def __get_stmt_type(self, stmt_body):
         # if is one of known recognized statements, categorize the statement
         if isinstance(stmt_body, tuple(type for type in self.STATEMENT_TYPES.keys())):
@@ -203,3 +209,8 @@ class TokenExtractor:
 
     def __cast_list_if_not(self, child_attr):
         return [child_attr] if not isinstance(child_attr, list) else child_attr
+
+    def __tokens_postprocessing(self):
+        # todo remove None values & functions lowercase
+        # cast sets to list
+        self.tokens = {k: list(v) for k, v in self.tokens.items()}

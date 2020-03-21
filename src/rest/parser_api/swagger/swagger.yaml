@@ -1,0 +1,78 @@
+---
+swagger: "2.0"
+info:
+  description: "PL/SQL query parser API"
+  version: "1.0.0"
+  title: "PL/SQL analysis"
+  contact:
+    email: "cerm20@vse.cz"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+schemes:
+- "https"
+- "http"
+paths:
+  /doc:
+    put:
+      summary: "Add query doc to Elasticsearch"
+      operationId: "add_doc"
+      consumes:
+      - "application/json"
+      - "application/xml"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "PL/SQL document object that needs to be indexed"
+        required: true
+        schema:
+          $ref: "#/definitions/Doc"
+      responses:
+        "201":
+          description: "Created"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "405":
+          description: "Invalid input"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "500":
+          description: "Error while parsing query"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+      x-swagger-router-controller: "parser_api.controllers.default_controller"
+definitions:
+  Doc:
+    type: "object"
+    required:
+    - "body"
+    - "index"
+    properties:
+      index:
+        type: "string"
+        example: "internal_database"
+      body:
+        type: "string"
+        example: "SELECT name FROM table WHERE id = 1"
+    xml:
+      name: "Doc"
+    example:
+      index: "internal_database"
+      body: "SELECT name FROM table WHERE id = 1"
+  ApiResponse:
+    type: "object"
+    properties:
+      status:
+        type: "string"
+      tokens:
+        type: "object"
+        properties: {}
+    example:
+      query: "{}"
+      status: "status"
+externalDocs:
+  description: "PL/SQL analysis project"
+  url: "https://github.com/cermatej/plsql-analysis/"
