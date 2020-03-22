@@ -211,8 +211,10 @@ class TokenExtractor:
         return [child_attr] if not isinstance(child_attr, list) else child_attr
 
     def __tokens_postprocessing(self):
-        # todo remove None values & functions lowercase
-        pass
+        if self.tokens['funcs']:
+            self.tokens['funcs'] = set([i.lower() for i in self.tokens['funcs']])
+        if None in self.tokens.keys():
+            del self.tokens[None]
 
     def __cast_serializable(self, tokens):
         res = dict()
