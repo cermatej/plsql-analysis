@@ -118,7 +118,7 @@ class TokenExtractor:
 
             self.__tokens_postprocessing()
 
-            return self.tokens
+            return self.__cast_serializable(self.tokens)
 
         return None
 
@@ -212,5 +212,13 @@ class TokenExtractor:
 
     def __tokens_postprocessing(self):
         # todo remove None values & functions lowercase
-        # cast sets to list
-        self.tokens = {k: list(v) for k, v in self.tokens.items()}
+        pass
+
+    def __cast_serializable(self, tokens):
+        res = dict()
+        for k, v in tokens.items():
+            if isinstance(v, set):
+                res[k] = list(v)
+            else:
+                res[k] = v
+        return res
