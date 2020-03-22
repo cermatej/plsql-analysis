@@ -19,7 +19,7 @@ from antlr_ast.ast import (
 from antlr_ast.inputstream import CaseTransformInputStream
 
 # from . import grammar
-from . import antlr_py as grammar
+from parser_api.parser.antlr_plsql import antlr_py as grammar
 
 # AST -------------------------------------------------------------------------
 # TODO: Finish Unary+Binary Expr
