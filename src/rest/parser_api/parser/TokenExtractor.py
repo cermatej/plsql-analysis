@@ -211,7 +211,7 @@ class TokenExtractor:
         return [child_attr] if not isinstance(child_attr, list) else child_attr
 
     def __tokens_postprocessing(self):
-        if self.tokens['funcs']:
+        if 'funcs' in self.tokens.keys():
             self.tokens['funcs'] = set([i.lower() for i in self.tokens['funcs']])
         if None in self.tokens.keys():
             del self.tokens[None]
