@@ -1,8 +1,11 @@
 import os
+import parser_client
+from parser_client import Configuration
+from parser_client.rest import ApiException
 from pprint import pprint
-
-from TokenExtractor import TokenExtractor
 import pytest
+
+from rest.parser_api.parser.TokenExtractor import TokenExtractor
 
 @pytest.mark.parametrize(
     "query,result",
@@ -32,19 +35,19 @@ import pytest
         ('SELECT col1 FROM mytable JOIN anothertable ON mytable.col2 = anothertable.col3;',
          {'type': 'select', 'tables': {'mytable', 'anothertable'}, 'columns': {'col1', 'mytable.col2', 'anothertable.col3'}}),
         ('SELECT COUNT (customer_id) FROM customer GROUP BY store_id;',
-         {'type': 'select', 'tables': {'customer'}, 'columns': {'customer_id', 'store_id'}, 'funcs': {'COUNT'}}),
+         {'type': 'select', 'tables': {'customer'}, 'columns': {'customer_id', 'store_id'}, 'funcs': {'count'}}),
         ('SELECT SUM(column_1) FROM mytable GROUP BY column_1 HAVING col3 > 100;',
-         {'type': 'select', 'tables': {'mytable'}, 'columns': {'column_1', 'col3'}, 'funcs': {'SUM'}, 'values': {'100'}}),
+         {'type': 'select', 'tables': {'mytable'}, 'columns': {'column_1', 'col3'}, 'funcs': {'sum'}, 'values': {'100'}}),
         ('select distinct name from t1;',
-         {'type': 'select', 'tables': {'t1'}, 'columns': {'name'}, 'values': {'distinct'}}),
-        ('select * from t1, ( t2 left outer join t3 using(dummy) )',
-         {'type': 'select', 'tables': {'t1'}, 'columns': {'name'}, 'values': {'distinct'}}),
+         {'type': 'select', 'tables': {'t1'}, 'columns': {'name'}, 'prefs': {'distinct'}}),
+        ('select * from t2 left outer join t3 using(dummy)',
+         {'type': 'select', 'tables': {'t2', 't3'}, 'columns': {'dummy'}}),
 
     ]
 )
 def test_analyse(query, result):
     te = TokenExtractor()
-    te.analyse(query)
+    tokens = te.analyse(query)
 
     # ignore metadata field when asserting
     tokens = {a: val for a, val in te.tokens.items() if a != 'metadata'}
@@ -53,7 +56,7 @@ def test_analyse(query, result):
 
 ################ BULK TESTS FROM EXAMPLE FILES
 
-QUERIES_PER_FILE = 3
+QUERIES_PER_FILE = 5
 BULK_SIZE = 10
 BULK_INDEX = 3
 
@@ -93,20 +96,28 @@ def test_analyse_bulk(q_sample):
 
 def __test_query(query):
     print(f'\n\n{query}\n')
-    # try:
-    te = TokenExtractor()
-    te.analyse(query)
-    # except:
-    #     assert True
-    pprint(te.tokens)
+
+    # get API instance
+    conf = Configuration()
+    conf.host = 'http://localhost:8080'
+    api_instance = parser_client.DefaultApi(parser_client.ApiClient(conf))
+
+    # create Doc object
+    doc = parser_client.Doc(index='custom_db', body=query)
+    try:
+        res = api_instance.add_doc(doc)
+    except ApiException as e:
+        assert False, f"Exception when calling DefaultApi->add_doc: {e}"
+
+    pprint(res)
 
     # any tokens found
-    if not te.tokens:
+    if not res.tokens:
         assert False, 'Any tokens found'
     # tokens contain value other than string
-    if not te.tokens['type']:
+    if not res.tokens['type']:
         assert False, 'Query type not found'
-    for key, tokens in te.tokens.items():
+    for key, tokens in res.tokens.items():
         # wrong classification
         if not isinstance(key, str):
             assert False, f'Key for tokens: "{tokens}" contain value other than str'
@@ -114,4 +125,5 @@ def __test_query(query):
         for token in tokens:
             if not isinstance(token, str):
                 assert False, f'Value for key "{key}" contains value other than str'
+
     assert True
