@@ -1,3 +1,6 @@
+from random import randint
+from datetime import datetime
+
 import connexion
 
 from parser_api.models.api_response import ApiResponse  # noqa: E501
@@ -17,8 +20,6 @@ def add_doc(body):  # noqa: E501
 
     :rtype: None
     """
-    # todo check if request is valid
-    # todo handle errors when parsing
 
     if connexion.request.is_json:
         body = Doc.from_dict(connexion.request.get_json())  # noqa: E501
@@ -32,6 +33,14 @@ def add_doc(body):  # noqa: E501
     except:
         return ApiResponse(status='Error while parsing query', tokens=None), 500
 
+    doc = {
+        'query': body.body,
+        'tokens': tokens,
+        'exec_time': randint(20, 1000),
+        'timestamp': datetime.now()
+    }
+
+    # todo return error message when cant connect to es
     es = Elasticsearch()
 
     es_index = f'plsql_{body.index}'
@@ -41,6 +50,3 @@ def add_doc(body):  # noqa: E501
     es.index(index=es_index, body=tokens)
 
     return ApiResponse(status='Created', tokens=tokens), 201
-
-
-
