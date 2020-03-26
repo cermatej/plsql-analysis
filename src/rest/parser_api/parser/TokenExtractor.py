@@ -98,7 +98,7 @@ class TokenExtractor:
     }
 
     IGNORED_ATTRS = {
-        'op', 'direction', 'LEFT_PAREN', 'RIGHT_PAREN', 'COMMA', 'data_type'
+        'op', 'direction', 'LEFT_PAREN', 'RIGHT_PAREN', 'COMMA', 'data_type', 'LEFT', 'OUTER', 'USING'
     }
 
     def __init__(self) -> None:
