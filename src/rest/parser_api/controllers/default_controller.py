@@ -35,14 +35,16 @@ def add_doc(body):  # noqa: E501
     doc = {
         'query': body.body,
         'tokens': tokens,
-        'exec_time': randint(20, 1000),
-        'timestamp': datetime.now()
+        'exec_time': randint(20, 1000), # optional parameter - missing if not provided
+        'timestamp': datetime.now() # optional parameter - if not provided use datetime.now()
     }
 
     ei = ElasticInstance()
     res = ei.index_doc(body.index, doc)
 
-    print(res)
-    # todo check indexing output value
+    if res['result'] == 'created':
+        return ApiResponse(status='Created', tokens=tokens), 201
+
+    return ApiResponse(status='Undefined error', tokens=None), 500
+
     # todo return whole doc instead of tokens?
-    return ApiResponse(status='Created', tokens=tokens), 201
