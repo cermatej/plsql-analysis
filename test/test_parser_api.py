@@ -1,5 +1,6 @@
 import os
 import parser_client
+from elasticsearch import Elasticsearch
 from parser_client import Configuration
 from parser_client.rest import ApiException
 from pprint import pprint
@@ -60,7 +61,12 @@ QUERIES_PER_FILE = 5
 BULK_SIZE = 10
 BULK_INDEX = 3
 
+INDEX_NAME = 'custom_db'
+API_HOST = 'http://localhost:8080'
+
 def pytest_generate_tests(metafunc):
+    if "q_sample" in metafunc.fixturenames or 'q_all' in metafunc.fixturenames:
+        __delete_existing_index()
     if "q_sample" in metafunc.fixturenames:
         metafunc.parametrize("q_sample", __get_query_sample(BULK_INDEX, BULK_SIZE))
     if 'q_all' in metafunc.fixturenames:
@@ -82,6 +88,9 @@ def __get_queries():
         queries = queries + queries_ne[:QUERIES_PER_FILE]
     return queries
 
+def __delete_existing_index():
+    Elasticsearch().indices.delete(index=f'plsql_{INDEX_NAME}', ignore=404)
+
 def test_analyse_single():
     single_index = 7
     q = __get_query_sample(BULK_INDEX, BULK_SIZE)
@@ -99,11 +108,11 @@ def __test_query(query):
 
     # get API instance
     conf = Configuration()
-    conf.host = 'http://localhost:8080'
+    conf.host = API_HOST
     api_instance = parser_client.DefaultApi(parser_client.ApiClient(conf))
 
     # create Doc object
-    doc = parser_client.Doc(index='custom_db', body=query)
+    doc = parser_client.Doc(index=INDEX_NAME, body=query)
     try:
         res = api_instance.add_doc(doc)
     except ApiException as e:

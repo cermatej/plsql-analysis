@@ -27,7 +27,6 @@ class TokenExtractor:
         ast.Identifier, ast.Column
     }
 
-    # todo dict res_key > list(attrs)?
     GENERAL_FIELDS_MAPPING = {
         'target_list': RES_KEY_COLUMNS,
         'where_clause': RES_KEY_COLUMNS,

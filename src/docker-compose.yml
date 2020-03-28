@@ -7,7 +7,10 @@ services:
       - "9200:9200"
     environment:
       LOGSTASH_START: 0
+      ES_HEAP_SIZE: "2g"
   api:
     build: ./rest
     ports:
       - "8080:8080"
+    depends_on:
+      - elk
