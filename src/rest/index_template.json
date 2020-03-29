@@ -6,14 +6,12 @@
     "index.number_of_replicas": "0"
   },
   "mappings": {
-    "_source": {
-      "enabled": false
-    },
     "dynamic_templates": [
       {
         "tokens_as_keywords": {
           "match_mapping_type": "string",
-          "match": "tokens.*",
+          "match": "*",
+          "unmatch": "query",
           "mapping": {
             "type": "keyword",
             "ignore_above": 256

@@ -14,7 +14,7 @@ class Singleton(type):
 
 class ElasticInstance(metaclass=Singleton):
 
-    HOST = 'localhost'
+    HOST = 'elk'
     PORT_KIBANA = '5601'
     PORT_ES = '9200'
     OBJECTS_FILENAME = 'saved_objects.ndjson'
