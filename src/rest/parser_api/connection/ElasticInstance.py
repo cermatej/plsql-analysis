@@ -1,5 +1,6 @@
 import json
 import logging
+import time
 
 import requests
 from elasticsearch import Elasticsearch
@@ -14,12 +15,16 @@ class Singleton(type):
 
 class ElasticInstance(metaclass=Singleton):
 
-    HOST = 'elk'
+    HOST = 'http://elk'
     PORT_KIBANA = '5601'
     PORT_ES = '9200'
     OBJECTS_FILENAME = 'saved_objects.ndjson'
     REQUEST_HEADERS = {'kbn-xsrf': 'reporting'}
     TEMPLATE_NAME = 'plsql_template'
+
+    ES_ENDPOINT = f"{HOST}:{PORT_ES}/_cluster/health"
+    KIBANA_ENDPOINT = f"{HOST}:{PORT_KIBANA}"
+    CONN_N_TRIES = 30
 
     def __init__(self):
         self.es = Elasticsearch(
@@ -27,8 +32,23 @@ class ElasticInstance(metaclass=Singleton):
         )
         self.es_index_prefix = 'plsql_'
 
-        logging.info('Waiting for ES status to turn yellow')
-        self.es.cluster.health(wait_for_status='yellow', request_timeout=60)
+        self.__wait_for_ready(self.ES_ENDPOINT)
+        self.__wait_for_ready(self.KIBANA_ENDPOINT)
+
+    def __wait_for_ready(self, endpoint):
+        for i in range(1,self.CONN_N_TRIES+1):
+            try:
+                logging.info(f'Waiting for API endpoint {endpoint} to be up ({i}/{self.CONN_N_TRIES})')
+                res = requests.request("GET", endpoint, headers=self.REQUEST_HEADERS)
+                if not res.status_code == 200:
+                    raise ConnectionError
+                return res
+            except:
+                time.sleep(2)
+                logging.debug('Elasticsearch request failed!')
+
+        logging.error(f'Could not connect to endpoint. Exiting...')
+        sys.exit(1)
 
     def index_doc(self, index, doc):
         es_index = self.es_index_prefix + index
@@ -44,12 +64,9 @@ class ElasticInstance(metaclass=Singleton):
     def __load_saved_objects(self):
         logging.info('Loading saved objects to Kibana')
 
-        url = f"http://{self.HOST}:{self.PORT_KIBANA}/api/saved_objects/_import"
-        files = {
-            'file': open(self.OBJECTS_FILENAME, 'r')
-        }
+        url = f"{self.KIBANA_ENDPOINT}/api/saved_objects/_import"
+        files = {'file': open(self.OBJECTS_FILENAME, 'r')}
         response = requests.request("POST", url, headers=self.REQUEST_HEADERS, files=files)
-        logging.debug(response.text)
         try:
             response.raise_for_status()
         except requests.exceptions.HTTPError as e:
