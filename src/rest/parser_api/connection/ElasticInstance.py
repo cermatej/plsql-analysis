@@ -54,14 +54,18 @@ class ElasticInstance(metaclass=Singleton):
             response.raise_for_status()
         except requests.exceptions.HTTPError as e:
             print(f'Populating saved objects failed with error: {e}')
-            sys.exit()
+            sys.exit(1)
 
     def __load_index_patterns(self):
         logging.info('Loading index templates to Elasticsearch')
 
-        template_body = json.load(open('index_template.json', 'r'))
-        res = self.es.indices.put_template(self.TEMPLATE_NAME, template_body)
-        logging.debug(res)
+        try:
+            template_body = json.load(open('index_template.json', 'r'))
+            res = self.es.indices.put_template(self.TEMPLATE_NAME, template_body)
+            logging.debug(res)
+        except:
+            print('Loading index templates failed with error')
+            sys.exit(1)
 
 
 
