@@ -1,3 +1,6 @@
+import json
+import logging
+
 import requests
 from elasticsearch import Elasticsearch
 import sys
@@ -16,12 +19,16 @@ class ElasticInstance(metaclass=Singleton):
     PORT_ES = '9200'
     OBJECTS_FILENAME = 'saved_objects.ndjson'
     REQUEST_HEADERS = {'kbn-xsrf': 'reporting'}
+    TEMPLATE_NAME = 'plsql_template'
 
     def __init__(self):
         self.es = Elasticsearch(
             self.HOST
         )
         self.es_index_prefix = 'plsql_'
+
+        logging.info('Waiting for ES status to turn yellow')
+        self.es.cluster.health(wait_for_status='yellow', request_timeout=60)
 
     def index_doc(self, index, doc):
         es_index = self.es_index_prefix + index
@@ -30,22 +37,31 @@ class ElasticInstance(metaclass=Singleton):
         self.es.indices.create(index=es_index, ignore=400)
         return self.es.index(index=es_index, body=doc)
 
-    def populate_saved_objects(self):
-        # wait for yellow status
-        self.es.cluster.health(wait_for_status='yellow', request_timeout=1)
+    def load_es_defaults(self):
+        self.__load_index_patterns()
+        self.__load_saved_objects()
+
+    def __load_saved_objects(self):
+        logging.info('Loading saved objects to Kibana')
 
         url = f"http://{self.HOST}:{self.PORT_KIBANA}/api/saved_objects/_import"
         files = {
             'file': open(self.OBJECTS_FILENAME, 'r')
         }
         response = requests.request("POST", url, headers=self.REQUEST_HEADERS, files=files)
-
-        print(response.text)
-
+        logging.debug(response.text)
         try:
             response.raise_for_status()
         except requests.exceptions.HTTPError as e:
             print(f'Populating saved objects failed with error: {e}')
             sys.exit()
+
+    def __load_index_patterns(self):
+        logging.info('Loading index templates to Elasticsearch')
+
+        template_body = json.load(open('index_template.json', 'r'))
+        res = self.es.indices.put_template(self.TEMPLATE_NAME, template_body)
+        logging.debug(res)
+
 
 
