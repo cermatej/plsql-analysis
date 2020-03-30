@@ -24,7 +24,7 @@ class ElasticInstance(metaclass=Singleton):
 
     ES_ENDPOINT = f"{HOST}:{PORT_ES}/_cluster/health"
     KIBANA_ENDPOINT = f"{HOST}:{PORT_KIBANA}"
-    CONN_N_TRIES = 30
+    CONN_N_TRIES = 60
 
     def __init__(self):
         self.es = Elasticsearch(
@@ -53,8 +53,6 @@ class ElasticInstance(metaclass=Singleton):
     def index_doc(self, index, doc):
         es_index = self.es_index_prefix + index
 
-        # create index if does not exist
-        self.es.indices.create(index=es_index, ignore=400)
         return self.es.index(index=es_index, body=doc)
 
     def load_es_defaults(self):

@@ -1,10 +1,12 @@
 import os
-import parser_client
 from elasticsearch import Elasticsearch
 from parser_client import Configuration
+import parser_client
 from parser_client.rest import ApiException
 from pprint import pprint
 import pytest
+import asyncio
+from datetime import datetime
 
 from rest.parser_api.parser.TokenExtractor import TokenExtractor
 
@@ -103,13 +105,35 @@ def test_analyse_all(q_all):
 def test_analyse_bulk(q_sample):
     __test_query(q_sample)
 
+async def send_request(query):
+    api_instance = __get_api_instance()
+
+    return api_instance.add_doc(parser_client.Doc(index=INDEX_NAME, body=query))
+
+async def send_requests(loop):
+    queries = __get_queries()
+    tasks = [loop.create_task(send_request(q)) for q in queries]
+    print(f'Creating {len(queries)} objects')
+    await asyncio.wait(tasks)
+    return tasks
+
+def test_load_bulk_async():
+    tick = datetime.now()
+
+    loop = asyncio.get_event_loop()
+    results = loop.run_until_complete(send_requests(loop))
+
+    tock = datetime.now()
+    seconds = round((tock - tick).total_seconds())
+
+    summary = [int(r.result().status == 'Created') for r in results]
+    print(f"Summary: created {sum(summary)}/{len(results)} documents in {seconds} seconds")
+
 def __test_query(query):
     print(f'\n\n{query}\n')
 
     # get API instance
-    conf = Configuration()
-    conf.host = API_HOST
-    api_instance = parser_client.DefaultApi(parser_client.ApiClient(conf))
+    api_instance = __get_api_instance()
 
     # create Doc object
     doc = parser_client.Doc(index=INDEX_NAME, body=query)
@@ -136,3 +160,10 @@ def __test_query(query):
                 assert False, f'Value for key "{key}" contains value other than str'
 
     assert True
+
+
+def __get_api_instance():
+    conf = Configuration()
+    conf.host = API_HOST
+    api_instance = parser_client.DefaultApi(parser_client.ApiClient(conf))
+    return api_instance
