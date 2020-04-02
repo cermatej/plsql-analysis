@@ -1,4 +1,4 @@
-from random import randint
+from random import randint, random
 from datetime import datetime
 
 import connexion
@@ -32,11 +32,12 @@ def add_doc(body):  # noqa: E501
     except:
         return ApiResponse(status='Error while parsing query', tokens=None), 500
 
+    exec_time = randint(20, 1000) if random() < 0.8 else None # argument optional in api
     doc = {
         'query': body.body,
         'tokens': tokens,
-        'exec_time': randint(20, 1000), # optional parameter - missing if not provided
-        'timestamp': datetime.now() # optional parameter - if not provided use datetime.now()
+        'exec_time': exec_time,  # optional parameter - None if not provided
+        'timestamp': datetime.now()  # optional parameter - if not provided use datetime.now()
     }
 
     ei = ElasticInstance()
