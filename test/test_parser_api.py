@@ -7,6 +7,7 @@ from pprint import pprint
 import pytest
 import asyncio
 from datetime import datetime
+import pickle
 
 from rest.parser_api.parser.TokenExtractor import TokenExtractor
 
@@ -45,7 +46,8 @@ from rest.parser_api.parser.TokenExtractor import TokenExtractor
          {'type': 'select', 'tables': {'t1'}, 'columns': {'name'}, 'prefs': {'distinct'}}),
         ('select * from t2 left outer join t3 using(dummy)',
          {'type': 'select', 'tables': {'t2', 't3'}, 'columns': {'dummy'}}),
-
+        ('DELETE FROM hr.locations@remote WHERE location_id > 3000;',
+         {}),
     ]
 )
 def test_analyse(query, result):
@@ -88,7 +90,8 @@ def __get_queries():
         queries_ne = [q for q in queries_clean if q]
 
         queries = queries + queries_ne[:QUERIES_PER_FILE]
-    return queries
+    # queries in pickle file
+    return queries + pickle.load(open( "queries.p", "rb" ))
 
 def __delete_existing_index():
     Elasticsearch().indices.delete(index=f'plsql_{INDEX_NAME}', ignore=404)
@@ -97,12 +100,20 @@ def test_analyse_single():
     single_index = 7
     q = __get_query_sample(BULK_INDEX, BULK_SIZE)
 
-    test_analyse_bulk(q[single_index])
+    test_analyse_sample(q[single_index])
 
 def test_analyse_all(q_all):
+    """
+    Test whole queries dataset
+    :param q_all: whole dataset
+    """
     __test_query(q_all)
 
-def test_analyse_bulk(q_sample):
+def test_analyse_sample(q_sample):
+    """
+    Test only sample of the whole query dataset
+    :param q_sample: injected query sample
+    """
     __test_query(q_sample)
 
 async def send_request(query):
@@ -117,7 +128,10 @@ async def send_requests(loop):
     await asyncio.wait(tasks)
     return tasks
 
-def test_load_bulk_async():
+def test_api_all_async():
+    """
+    Push all available queries to API instance async and print summary
+    """
     tick = datetime.now()
 
     loop = asyncio.get_event_loop()
@@ -126,8 +140,14 @@ def test_load_bulk_async():
     tock = datetime.now()
     seconds = round((tock - tick).total_seconds())
 
-    summary = [int(r.result().status == 'Created') for r in results]
-    print(f"Summary: created {sum(summary)}/{len(results)} documents in {seconds} seconds")
+    created = 0
+    for r in results:
+        try:
+            created = created + int(r.result().status == 'Created')
+        except:
+            continue
+
+    print(f"Summary: created {created}/{len(results)} documents in {seconds} seconds")
 
 def __test_query(query):
     print(f'\n\n{query}\n')

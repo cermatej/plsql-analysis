@@ -1,4 +1,23 @@
 # plsql-analysis
+###About
+##### Description
+##### Motivation, use cases
+##### Achitecture plan
+##### Elasticsearch
+##### Parser antlr-tree, how it works
+##### Crawler
+##### Api reference
+##### Caveats
+* optimizing parser
+* cleaning crawler
+
+### Usage
+##### Discover example searches
+`"on delete cascade"`
+##### Dashboards
+* main dashboard (controls, screenshots)
+
+
 
 ### Developer notes
 
