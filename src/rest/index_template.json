@@ -23,6 +23,9 @@
       "exec_time": {
         "type": "long"
       },
+      "parse_time": {
+        "type": "long"
+      },
       "query": {
         "type": "text",
         "fields": {
