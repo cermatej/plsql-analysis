@@ -15,26 +15,36 @@ class Doc(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, index: str=None, body: str=None):  # noqa: E501
+    def __init__(self, index: str=None, body: str=None, exec_time: float=None, timestamp: str=None):  # noqa: E501
         """Doc - a model defined in Swagger
 
         :param index: The index of this Doc.  # noqa: E501
         :type index: str
         :param body: The body of this Doc.  # noqa: E501
         :type body: str
+        :param exec_time: The exec_time of this Doc.  # noqa: E501
+        :type exec_time: float
+        :param timestamp: The timestamp of this Doc.  # noqa: E501
+        :type timestamp: str
         """
         self.swagger_types = {
             'index': str,
-            'body': str
+            'body': str,
+            'exec_time': float,
+            'timestamp': str
         }
 
         self.attribute_map = {
             'index': 'index',
-            'body': 'body'
+            'body': 'body',
+            'exec_time': 'exec_time',
+            'timestamp': 'timestamp'
         }
 
         self._index = index
         self._body = body
+        self._exec_time = exec_time
+        self._timestamp = timestamp
 
     @classmethod
     def from_dict(cls, dikt) -> 'Doc':
@@ -92,3 +102,45 @@ class Doc(Model):
             raise ValueError("Invalid value for `body`, must not be `None`")  # noqa: E501
 
         self._body = body
+
+    @property
+    def exec_time(self) -> float:
+        """Gets the exec_time of this Doc.
+
+
+        :return: The exec_time of this Doc.
+        :rtype: float
+        """
+        return self._exec_time
+
+    @exec_time.setter
+    def exec_time(self, exec_time: float):
+        """Sets the exec_time of this Doc.
+
+
+        :param exec_time: The exec_time of this Doc.
+        :type exec_time: float
+        """
+
+        self._exec_time = exec_time
+
+    @property
+    def timestamp(self) -> str:
+        """Gets the timestamp of this Doc.
+
+
+        :return: The timestamp of this Doc.
+        :rtype: str
+        """
+        return self._timestamp
+
+    @timestamp.setter
+    def timestamp(self, timestamp: str):
+        """Sets the timestamp of this Doc.
+
+
+        :param timestamp: The timestamp of this Doc.
+        :type timestamp: str
+        """
+
+        self._timestamp = timestamp

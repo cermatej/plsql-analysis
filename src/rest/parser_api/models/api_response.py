@@ -15,26 +15,26 @@ class ApiResponse(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, status: str=None, tokens: object=None):  # noqa: E501
+    def __init__(self, status: str=None, doc: object=None):  # noqa: E501
         """ApiResponse - a model defined in Swagger
 
         :param status: The status of this ApiResponse.  # noqa: E501
         :type status: str
-        :param tokens: The tokens of this ApiResponse.  # noqa: E501
-        :type tokens: object
+        :param doc: The doc of this ApiResponse.  # noqa: E501
+        :type doc: object
         """
         self.swagger_types = {
             'status': str,
-            'tokens': object
+            'doc': object
         }
 
         self.attribute_map = {
             'status': 'status',
-            'tokens': 'tokens'
+            'doc': 'doc'
         }
 
         self._status = status
-        self._tokens = tokens
+        self._doc = doc
 
     @classmethod
     def from_dict(cls, dikt) -> 'ApiResponse':
@@ -69,22 +69,22 @@ class ApiResponse(Model):
         self._status = status
 
     @property
-    def tokens(self) -> object:
-        """Gets the tokens of this ApiResponse.
+    def doc(self) -> object:
+        """Gets the doc of this ApiResponse.
 
 
-        :return: The tokens of this ApiResponse.
+        :return: The doc of this ApiResponse.
         :rtype: object
         """
-        return self._tokens
+        return self._doc
 
-    @tokens.setter
-    def tokens(self, tokens: object):
-        """Sets the tokens of this ApiResponse.
+    @doc.setter
+    def doc(self, doc: object):
+        """Sets the doc of this ApiResponse.
 
 
-        :param tokens: The tokens of this ApiResponse.
-        :type tokens: object
+        :param doc: The doc of this ApiResponse.
+        :type doc: object
         """
 
-        self._tokens = tokens
+        self._doc = doc

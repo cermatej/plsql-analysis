@@ -24,32 +24,33 @@ def add_doc(body):  # noqa: E501
         body = Doc.from_dict(connexion.request.get_json())  # noqa: E501
 
     if (not body.body or not body.index):
-        return ApiResponse(status='Invalid input', tokens=None), 405
+        return ApiResponse(status='Invalid input', doc=None), 405
 
+    # get tokens body
     tick = datetime.now()
     try:
         te = TokenExtractor()
         tokens = te.analyse(body.body)
     except:
-        return ApiResponse(status='Error while parsing query', tokens=None), 500
+        return ApiResponse(status='Error while parsing query', doc=None), 500
     tock = datetime.now()
 
-    exec_time = ((len(body.body) / 100) * randint(100,
-                                                  700)) if random() < 0.8 else None  # argument optional in api - mock for testing purposes
+    mock_exec_time = ((len(body.body) / 100) * randint(100,
+                                                      700)) if random() < 0.8 else None  # argument optional in api - mock for testing purposes
+    ts = datetime.strptime(body.timestamp, '%Y-%m-%d %H:%M:%S.%f')
+
     doc = {
         'query': body.body,
         'tokens': tokens,
         'parse_time': int((tock - tick).total_seconds() * 1000),
-        'exec_time': exec_time,  # optional parameter - None if not provided
-        'timestamp': datetime.now()  # optional parameter - if not provided use datetime.now()
+        'exec_time': body.exec_time if body.exec_time else mock_exec_time,  # optional parameter - None if not provided
+        'timestamp': ts if ts else datetime.now()  # optional parameter - if not provided use datetime.now()
     }
 
     ei = ElasticInstance()
     res = ei.index_doc(body.index, doc)
 
     if res['result'] == 'created':
-        return ApiResponse(status='Created', tokens=tokens), 201
+        return ApiResponse(status='Created', doc=doc), 201
 
-    return ApiResponse(status='Undefined error', tokens=None), 500
-
-    # todo return whole doc instead of tokens?
+    return ApiResponse(status='Undefined error', doc=None), 500

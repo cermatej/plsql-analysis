@@ -32,23 +32,33 @@ class Doc(object):
     """
     swagger_types = {
         'index': 'str',
-        'body': 'str'
+        'body': 'str',
+        'exec_time': 'float',
+        'timestamp': 'str'
     }
 
     attribute_map = {
         'index': 'index',
-        'body': 'body'
+        'body': 'body',
+        'exec_time': 'exec_time',
+        'timestamp': 'timestamp'
     }
 
-    def __init__(self, index=None, body=None):  # noqa: E501
+    def __init__(self, index=None, body=None, exec_time=None, timestamp=None):  # noqa: E501
         """Doc - a model defined in Swagger"""  # noqa: E501
 
         self._index = None
         self._body = None
+        self._exec_time = None
+        self._timestamp = None
         self.discriminator = None
 
         self.index = index
         self.body = body
+        if exec_time is not None:
+            self.exec_time = exec_time
+        if timestamp is not None:
+            self.timestamp = timestamp
 
     @property
     def index(self):
@@ -95,6 +105,48 @@ class Doc(object):
             raise ValueError("Invalid value for `body`, must not be `None`")  # noqa: E501
 
         self._body = body
+
+    @property
+    def exec_time(self):
+        """Gets the exec_time of this Doc.  # noqa: E501
+
+
+        :return: The exec_time of this Doc.  # noqa: E501
+        :rtype: float
+        """
+        return self._exec_time
+
+    @exec_time.setter
+    def exec_time(self, exec_time):
+        """Sets the exec_time of this Doc.
+
+
+        :param exec_time: The exec_time of this Doc.  # noqa: E501
+        :type: float
+        """
+
+        self._exec_time = exec_time
+
+    @property
+    def timestamp(self):
+        """Gets the timestamp of this Doc.  # noqa: E501
+
+
+        :return: The timestamp of this Doc.  # noqa: E501
+        :rtype: str
+        """
+        return self._timestamp
+
+    @timestamp.setter
+    def timestamp(self, timestamp):
+        """Sets the timestamp of this Doc.
+
+
+        :param timestamp: The timestamp of this Doc.  # noqa: E501
+        :type: str
+        """
+
+        self._timestamp = timestamp
 
     def to_dict(self):
         """Returns the model properties as a dict"""

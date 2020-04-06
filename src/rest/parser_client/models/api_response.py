@@ -32,25 +32,25 @@ class ApiResponse(object):
     """
     swagger_types = {
         'status': 'str',
-        'tokens': 'object'
+        'doc': 'object'
     }
 
     attribute_map = {
         'status': 'status',
-        'tokens': 'tokens'
+        'doc': 'doc'
     }
 
-    def __init__(self, status=None, tokens=None):  # noqa: E501
+    def __init__(self, status=None, doc=None):  # noqa: E501
         """ApiResponse - a model defined in Swagger"""  # noqa: E501
 
         self._status = None
-        self._tokens = None
+        self._doc = None
         self.discriminator = None
 
         if status is not None:
             self.status = status
-        if tokens is not None:
-            self.tokens = tokens
+        if doc is not None:
+            self.doc = doc
 
     @property
     def status(self):
@@ -74,25 +74,25 @@ class ApiResponse(object):
         self._status = status
 
     @property
-    def tokens(self):
-        """Gets the tokens of this ApiResponse.  # noqa: E501
+    def doc(self):
+        """Gets the doc of this ApiResponse.  # noqa: E501
 
 
-        :return: The tokens of this ApiResponse.  # noqa: E501
+        :return: The doc of this ApiResponse.  # noqa: E501
         :rtype: object
         """
-        return self._tokens
+        return self._doc
 
-    @tokens.setter
-    def tokens(self, tokens):
-        """Sets the tokens of this ApiResponse.
+    @doc.setter
+    def doc(self, doc):
+        """Sets the doc of this ApiResponse.
 
 
-        :param tokens: The tokens of this ApiResponse.  # noqa: E501
+        :param doc: The doc of this ApiResponse.  # noqa: E501
         :type: object
         """
 
-        self._tokens = tokens
+        self._doc = doc
 
     def to_dict(self):
         """Returns the model properties as a dict"""
