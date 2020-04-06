@@ -37,14 +37,14 @@ def add_doc(body):  # noqa: E501
 
     mock_exec_time = ((len(body.body) / 100) * randint(100,
                                                       700)) if random() < 0.8 else None  # argument optional in api - mock for testing purposes
-    ts = datetime.strptime(body.timestamp, '%Y-%m-%d %H:%M:%S.%f')
+    ts = datetime.strptime(body.timestamp, '%Y-%m-%d %H:%M:%S.%f') if body.timestamp else datetime.now()
 
     doc = {
         'query': body.body,
         'tokens': tokens,
         'parse_time': int((tock - tick).total_seconds() * 1000),
         'exec_time': body.exec_time if body.exec_time else mock_exec_time,  # optional parameter - None if not provided
-        'timestamp': ts if ts else datetime.now()  # optional parameter - if not provided use datetime.now()
+        'timestamp': ts # optional parameter - if not provided use datetime.now()
     }
 
     ei = ElasticInstance()

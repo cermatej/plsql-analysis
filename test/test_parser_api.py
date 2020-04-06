@@ -152,7 +152,7 @@ def __test_query_api(query):
 
     pprint(res)
 
-    __assert_tokens(res.tokens)
+    __assert_tokens(res.doc['tokens'])
 
 
 def __assert_tokens(tokens):
