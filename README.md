@@ -10,12 +10,15 @@ Some of the projects default visualizations & dashboards are loaded to Kibana au
 * **optimizing queries** - When data about execution time of the query is provided, one can discover queries with poor performance and optimize/avoid them.
 * **time-based analysis** - Query objects in ES holds time information as well, which can be valuable when tracking down the source of high database load or simply just to visualize the amount of incoming queries over time.
 ### Usage
-##### Kibana > Dashboards
+#### Kibana > Dashboards
 Various project dashboards are preloaded to kibana to help you explore your data.
 They can be listed by clicking [Dashboards] in the left panel. 
 
+![Types pie chart](doc/images/pie_types.png)
 
-##### Kibana > Discover
+![Slowest query types](doc/images/slowest.png)
+
+#### Kibana > Discover
 ![Tables filter](doc/images/tables.png)
 
 ![Dashboard time-filtering](doc/images/dash_time.png)
@@ -30,30 +33,22 @@ Refer to elastic documentation [here](https://www.elastic.co/guide/en/kibana/cur
 
 `tokens.columns : "employee_id"` - queries that use column
 
-###### Main dashboard
-    screenshots/gifs
-![Types pie chart](doc/images/pie_types.png)
-
-![Slowest query types](doc/images/slowest.png)
-  
-##### Architecture
+### Architecture
 Project utilizes [Docker compose](https://docs.docker.com/compose/) to run all the services needed. It requires at least 3GB of RAM. See [sebp/elk documentation](https://elk-docker.readthedocs.io/) for more information.
 ![Architecture](doc/images/architecture.png)
-##### API
+#### API
 Data input was left for one to implement for particular use-case, therefore project provides an API endpoint where the raw queries can be send.
 Documentation for the API can be found [here](src/rest/parser_api/swagger/swagger.yaml) 
-##### Elasticsearch
+#### Elasticsearch
 Elasticsearch is a distributed search-engine based on Lucene and together with Kibana it happened to be a perfect tool for this purpose.
-##### Parser antlr-tree, how it works
-##### Dataset crawler
+#### Parser antlr-tree, how it works
+#### Dataset crawler
 Finding perfect dataset to test the parser, one that contains variety of queries as well as large enough dataset for analysis purposes, was not a easy task.
 For that purpose I made simple web crawler, that can crawl all the query examples from whole PL/SQL Oracle documentation.
-##### Caveats
+### Caveats
 * optimizing parser
 * cleaning crawler
 * drop queries with more than 1000 chars (based on dataset)
-
-
 
 todo: scaling ES for bigger solutions
 
