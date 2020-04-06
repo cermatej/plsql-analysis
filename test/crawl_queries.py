@@ -1,20 +1,18 @@
 import pickle
+import re
+
 import requests
 from bs4 import BeautifulSoup
 
 URL_PREF = 'https://docs.oracle.com/cd/B28359_01/server.111/b28286/'
 FILENAME = "queries.p"
-RESERVED_WORDS = ["ACCESS", "ADD", "ALL", "ALTER", "ANY", "AS", "ASC", "AUDIT", "BETWEEN", "BY", "CHECK",
-                  "CLUSTER", "COLUMN", "COMMENT", "COMPRESS", "CONNECT", "CREATE", "CURRENT", "DECIMAL",
-                  "DEFAULT", "DELETE", "DESC", "DISTINCT", "DROP", "ELSE", "EXCLUSIVE", "EXISTS", "FILE", "FLOAT",
-                  "FOR", "FROM", "GRANT", "GROUP", "HAVING", "IDENTIFIED", "IMMEDIATE", "IN", "INCREMENT", "INDEX",
-                  "INITIAL", "INSERT", "INTEGER", "INTERSECT", "INTO", "IS", "LEVEL", "LIKE", "LOCK", "LONG",
-                  "MAXEXTENTS", "MINUS", "MLSLABEL", "MODE", "MODIFY", "NOAUDIT", "NOCOMPRESS", "NOT", "NOWAIT", "NULL",
-                  "OF", "OFFLINE", "ON", "ONLINE", "OPTION", "ORDER", "PCTFREE", "PRIOR", "PRIVILEGES",
-                  "PUBLIC", "RAW", "RENAME", "RESOURCE", "REVOKE", "ROWNUM", "ROWS", "SELECT",
-                  "SESSION", "SET", "SHARE", "SIZE", "SMALLINT", "START", "SUCCESSFUL", "SYNONYM", "SYSDATE", "TABLE",
-                  "THEN", "TRIGGER", "UNION", "UNIQUE", "UPDATE", "USER", "VALIDATE", "VALUES", "VARCHAR",
-                  "VARCHAR2", "VIEW", "WHENEVER", "WHERE", "WITH"]
+RESERVED_WORDS = ["ACCESS", "ADD", "ALTER", "AUDIT", "CLUSTER", "COMMENT", "COMPRESS", "CONNECT", "CREATE", "CURRENT",
+                  "DELETE", "DROP", "FOR", "GRANT", "INCREMENT", "INDEX",
+                  "INITIAL", "INSERT", "INTERSECT", "INTO", "LOCK", "MODE", "MODIFY",
+                  "PCTFREE",
+                  "PUBLIC", "RENAME", "RESOURCE", "REVOKE", "SELECT",
+                  "SESSION", "SET"
+                             "TRIGGER", "UNION", "UPDATE", "VALIDATE"]
 
 
 def get_link(page):
@@ -35,12 +33,14 @@ def save():
             q_cleaned = []
             for q in q_list:
                 for q_s in q.split(';'):
-                    q_cleaned.append(' '.join(q_s.replace('\n', '').strip().strip('"\'').strip().split()))
+                    q_cleaned.append(' '.join(q_s.replace('\n', ' ').strip().strip('"\'/*').strip().split()))
+            # remove empty strings and comments
+            q_cleaned = [re.sub('/ ?\*.*\* ?/( \*)?', '', q) for q in q_cleaned if q]
             # filter using reserved words
             q_filtered = []
             for q in q_cleaned:
                 for word in RESERVED_WORDS:
-                    if q.find(word) != -1:
+                    if q.startswith(word):
                         q_filtered.append(q)
                         break
             if q_list != q_filtered:
