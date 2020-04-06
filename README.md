@@ -10,6 +10,7 @@
 ##### Caveats
 * optimizing parser
 * cleaning crawler
+* drop queries with more than 1000 chars (based on dataset)
 
 ### Usage
 ##### Discover example searches

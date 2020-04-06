@@ -2,6 +2,9 @@ from collections import defaultdict
 from parser_api.parser.antlr_plsql import ast
 
 class TokenExtractor:
+
+    MAX_QUERY_LENGTH = 1000
+
     RES_KEY_TYPE = 'type'
     RES_KEY_METADATA = 'metadata'
     RES_KEY_COLUMNS = 'columns'
@@ -20,7 +23,8 @@ class TokenExtractor:
         ast.UpdateStmt: 'update',
         ast.AlterTable: 'alter_table',
         ast.CreateTable: 'create_table',
-        ast.DropTable: 'drop_table'
+        ast.DropTable: 'drop_table',
+        ast.DeleteStmt: 'delete'
     }
 
     METADATA_IGNORED = {
@@ -105,21 +109,25 @@ class TokenExtractor:
         self.tree = None
 
     def analyse(self, query):
-        #try:
-        self.tree = ast.parse(query)
-        # except KeyError:
-        #     print('fail')
+
+        if len(query) > self.MAX_QUERY_LENGTH:
+            raise Exception(f'Query exceeds maximum allowed length: {self.MAX_QUERY_LENGTH}')
+
+        try:
+            self.tree = ast.parse(query)
+        except:
+            raise Exception('Internal parser logic failed')
 
         if self.tree.body:
             body = self.tree.body[0]
             self.__get_stmt_type(body)
             self.__get_tokens(body)
-
             self.__tokens_postprocessing()
 
-            return self.__cast_serializable(self.tokens)
+            if self.tokens and not self.tokens[self.RES_KEY_TYPE] == 'Unit_statement_body':
+                return self.__cast_serializable(self.tokens)
 
-        return None
+        raise Exception('Could not parse document (might be unsupported query type)')
 
     def __get_stmt_type(self, stmt_body):
         # if is one of known recognized statements, categorize the statement
