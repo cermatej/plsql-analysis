@@ -15,15 +15,8 @@ Various project dashboards are preloaded to kibana to help you explore your data
 They can be listed by clicking [Dashboards] in the left panel. 
 
 ![Dasboard gif](doc/images/dashboard.gif)
-
-![Types pie chart](doc/images/pie_types.png)
-
-![Slowest query types](doc/images/slowest.png)
-
 #### Kibana > Discover
-![Tables filter](doc/images/tables.png)
-
-![Discover time-filtering](doc/images/dash_time.png)
+![Discover gif](doc/images/discover.gif)
 
 Refer to elastic documentation [here](https://www.elastic.co/guide/en/kibana/current/search.html), which might help you to customize your searches in Kibana. Here are some examples of useful searches.
 
