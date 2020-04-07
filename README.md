@@ -14,6 +14,8 @@ Some of the projects default visualizations & dashboards are loaded to Kibana au
 Various project dashboards are preloaded to kibana to help you explore your data.
 They can be listed by clicking [Dashboards] in the left panel. 
 
+![Dasboard gif](doc/images/dashboard.gif)
+
 ![Types pie chart](doc/images/pie_types.png)
 
 ![Slowest query types](doc/images/slowest.png)
@@ -21,7 +23,7 @@ They can be listed by clicking [Dashboards] in the left panel.
 #### Kibana > Discover
 ![Tables filter](doc/images/tables.png)
 
-![Dashboard time-filtering](doc/images/dash_time.png)
+![Discover time-filtering](doc/images/dash_time.png)
 
 Refer to elastic documentation [here](https://www.elastic.co/guide/en/kibana/current/search.html), which might help you to customize your searches in Kibana. Here are some examples of useful searches.
 
@@ -36,6 +38,7 @@ Refer to elastic documentation [here](https://www.elastic.co/guide/en/kibana/cur
 ### Architecture
 Project utilizes [Docker compose](https://docs.docker.com/compose/) to run all the services needed. It requires at least 3GB of RAM. See [sebp/elk documentation](https://elk-docker.readthedocs.io/) for more information.
 ![Architecture](doc/images/architecture.png)
+
 #### API
 Data input was left for one to implement for particular use-case, therefore project provides an API endpoint where the raw queries can be send.
 Documentation for the API can be found [here](src/rest/parser_api/swagger/swagger.yaml) 
