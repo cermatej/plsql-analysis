@@ -9,7 +9,7 @@ Project can be integrated in your solution, consult the [Architecture](###-Archi
 * **Datastore analysis** - Large amounts of data can be indexed into Elasticsearch (with proper cluster management). Therefore one can load large datasets and explore the data in a structured way.
 * **Optimizing queries** - When information about execution time of the query is provided to the API, one can discover queries with poor performance and optimize/avoid using them.
 * **Time-based analysis** - Query objects in Elastic carries information about time as well, that can be valuable when tracking down the source of high database load or simply just to visualize the amount of incoming queries over time. Useful as well when trying to locate queries that were executed in the certain time period.
-### Usage
+### Features
 #### Kibana > Dashboards
 Some of the projects default visualizations & dashboards are loaded to Kibana automatically, but various other can be made easily.
 Dasboards can be listed by clicking [Dashboards] in the left panel. 
@@ -28,9 +28,19 @@ Refer to elastic documentation [here](https://www.elastic.co/guide/en/kibana/cur
 `tokens.metadata :"uses_SortBy"` - queries that use SORT BY clause
 
 `tokens.columns : "employee_id"` - queries that use column
-
+### Prerequisites
+Project utilizes [Docker compose](https://docs.docker.com/compose/) to run all the services needed. See the individual components description if you want to use it for your own project.
+* Docker installation with at least 3GB of RAM - see [Docker docs](https://docs.docker.com/).
+### Usage
+```bash
+cd ./src
+docker-compose up -d
+```
+After all services starts, they can be accessed here:
+* API endpoint - [localhost:8080](localhost:8080)
+* Kibana - [localhost:5601](localhost:5601)
+* Elasticsearch - [localhost:9200](localhost:9200)
 ### Architecture
-Project utilizes [Docker compose](https://docs.docker.com/compose/) to run all the services needed. It requires at least 3GB of RAM. See the individual components description if you want to use it for your own project.
 ![Architecture](doc/images/architecture.png)
 #### Parser API
 Data input was left for one to implement for particular use-case, therefore project provides an API endpoint where the raw queries can be send.
