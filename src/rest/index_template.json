@@ -1,0 +1,42 @@
+{
+  "index_patterns": ["plsql_*"],
+  "order" : 0,
+  "settings": {
+    "number_of_shards": 1,
+    "index.number_of_replicas": "0"
+  },
+  "mappings": {
+    "dynamic_templates": [
+      {
+        "tokens_as_keywords": {
+          "match_mapping_type": "string",
+          "match": "*",
+          "unmatch": "query",
+          "mapping": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      }
+    ],
+    "properties": {
+      "exec_time": {
+        "type": "long"
+      },
+      "parse_time": {
+        "type": "long"
+      },
+      "query": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type":  "keyword"
+          }
+        }
+      },
+      "timestamp": {
+        "type": "date"
+      }
+    }
+  }
+}
