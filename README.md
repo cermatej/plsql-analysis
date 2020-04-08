@@ -1,6 +1,5 @@
 # Bachelor thesis: PL/SQL Analysis
-###### Matěj Čermák
-***
+Matěj Čermák
 ## Abstract
 The goal of this thesis is to build standalone platform to facilitate PL/SQL query analysis.  
 Core of the project is a ANTLR based parser that has an ability to extract useful **metadata (tables, columns, keywords used)** from the queries.  
@@ -36,9 +35,9 @@ cd ./src
 docker-compose up -d
 ```
 After all services starts, they can be accessed here:
-* API endpoint - [localhost:8080](localhost:8080)
-* Kibana - [localhost:5601](localhost:5601)
-* Elasticsearch - [localhost:9200](localhost:9200)
+* API endpoint - [localhost:8080](http://localhost:8080)
+* Kibana - [localhost:5601](http://localhost:5601)
+* Elasticsearch - [localhost:9200](http://localhost:9200)
 ## Architecture
 ![Architecture](doc/images/architecture.png)
 ### Parser API
