@@ -5,7 +5,7 @@ The goal of this thesis is to build standalone platform to facilitate PL/SQL que
 Core of the project is a ANTLR based parser that has an ability to extract useful **metadata (tables, columns, keywords used)** from the queries.  
 The resulting objects are then indexed to Elasticsearch which allows one to explore the data in Kibana using its features like **dashboards, search, filtering** and much more.
 ### Possible use cases
-Project can be integrated in your solution, consult the [Architecture](###-Architecture) section for more.
+Project can be integrated in your solution, consult the [Architecture](#architecture) section for more.
 * **Datastore analysis** - Large amounts of data can be indexed into Elasticsearch (with proper cluster management). Therefore one can load large datasets and explore the data in a structured way.
 * **Optimizing queries** - When information about execution time of the query is provided to the API, one can discover queries with poor performance and optimize/avoid using them.
 * **Time-based analysis** - Query objects in Elastic carries information about time as well, that can be valuable when tracking down the source of high database load or simply just to visualize the amount of incoming queries over time. Useful as well when trying to locate queries that were executed in the certain time period.
